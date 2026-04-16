@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐋 Token Research Agent</title>
+  <style>
+    /* ── Reset & base ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --surface2:  #21262d;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --cyan:      #39d0d8;
+      --cyan-dim:  #1a4f54;
+
+      --safe:      #3fb950;
+      --safe-bg:   #0d2d14;
+      --caution:   #d29922;
+      --caution-bg:#2d1e00;
+      --risky:     #e08b3a;
+      --risky-bg:  #2d1600;
+      --scam:      #f85149;
+      --scam-bg:   #2d0b09;
+
+      --radius:    10px;
+      --glow:      0 0 24px rgba(57, 208, 216, 0.12);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px 80px;
+    }
+
+    .container { width: 100%; max-width: 760px; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header-whale {
+      font-size: 52px;
+      line-height: 1;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 0 18px rgba(57,208,216,0.35));
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    /* ── Search card ─────────────────────────────────────────────────── */
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--glow);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .address-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .address-input::placeholder { color: var(--muted); }
+
+    .address-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(57,208,216,0.12);
+    }
+
+    .btn-analyze {
+      background: var(--cyan);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 22px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-analyze:hover  { background: #4ee8f0; }
+    .btn-analyze:active { transform: scale(0.97); }
+    .btn-analyze:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .chain-hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chain-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .chain-eth { background: #1c2a4a; color: #58a6ff; }
+    .chain-sol { background: #1a0d2e; color: #ab68e8; }
+
+    /* ── Progress ───────────────────────────────────────────────────── */
+    .progress-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+      display: none;
+    }
+
+    .progress-card.visible { display: block; }
+
+    .progress-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 16px;
+    }
+
+    .progress-steps { list-style: none; }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 0;
+      font-size: 14px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .step.active  { color: var(--text); }
+    .step.done    { color: var(--safe); }
+
+    .step-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* spinner */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .check { color: var(--safe); font-size: 14px; }
+    .dot   { width: 6px; height: 6px; border-radius: 50%;
+             background: var(--border); margin: 0 auto; }
+
+    /* ── Result card ────────────────────────────────────────────────── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: none;
+      animation: fadeUp 0.35s ease;
+    }
+
+    .result-card.visible { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* top bar */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .token-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .token-chain {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    .score-badge {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .score-number {
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .score-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+
+    .score-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* score meter */
+    .score-meter {
+      width: 100%;
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s ease;
+    }
+
+    /* result sections */
+    .result-body { padding: 24px; display: flex; flex-direction: column; gap: 22px; }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid transparent;
+    }
+
+    .pill-red   { background: var(--scam-bg);    color: var(--scam);    border-color: rgba(248,81,73,0.25); }
+    .pill-green { background: var(--safe-bg);    color: var(--safe);    border-color: rgba(63,185,80,0.25); }
+    .pill-none  { background: var(--surface2);   color: var(--muted); }
+
+    .prose {
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.7;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* notion link */
+    .notion-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .notion-link {
+      color: var(--cyan);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .notion-link:hover { text-decoration: underline; }
+
+    /* ── Error card ──────────────────────────────────────────────────── */
+    .error-card {
+      background: var(--scam-bg);
+      border: 1px solid rgba(248,81,73,0.3);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: var(--scam);
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-card.visible { display: block; }
+
+    /* ── Color utilities ────────────────────────────────────────────── */
+    .text-safe    { color: var(--safe); }
+    .text-caution { color: var(--caution); }
+    .text-risky   { color: var(--risky); }
+    .text-scam    { color: var(--scam); }
+
+    .fill-safe    { background: var(--safe); }
+    .fill-caution { background: var(--caution); }
+    .fill-risky   { background: var(--risky); }
+    .fill-scam    { background: var(--scam); }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .input-row { flex-direction: column; }
+      .result-header { flex-direction: column; align-items: flex-start; }
+      .score-badge { align-self: flex-end; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-whale">🐋</div>
+      <h1>Token Research Agent</h1>
+      <p>AI-powered on-chain security analysis for Ethereum &amp; Solana tokens</p>
+    </div>
+
+    <!-- Search -->
+    <div class="search-card">
+      <div class="input-row">
+        <input
+          id="addressInput"
+          class="address-input"
+          type="text"
+          placeholder="Paste token address…  0x… or base58"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="analyzeBtn" class="btn-analyze" onclick="startAnalysis()">Analyze</button>
+      </div>
+      <div class="chain-hint" id="chainHint">
+        Paste an address to auto-detect chain.
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-card" id="progressCard">
+      <div class="progress-title">Analysis in progress</div>
+      <ul class="progress-steps" id="progressSteps"></ul>
+    </div>
+
+    <!-- Error -->
+    <div class="error-card" id="errorCard"></div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div>
+          <span class="token-name" id="rTokenName">—</span>
+          <span class="token-chain" id="rChain"></span>
+        </div>
+        <div class="score-badge">
+          <div class="score-number" id="rScore">—</div>
+          <div class="score-right">
+            <div class="score-label" id="rLabel">—</div>
+            <div class="score-sub">Risk score / 100</div>
+            <div class="score-meter">
+              <div class="score-fill" id="rFill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-body">
+        <!-- Red flags -->
+        <div id="sectionFlags">
+          <div class="section-title">🚩 Red Flags</div>
+          <div class="pills" id="rFlags"></div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Positive signals -->
+        <div id="sectionSignals">
+          <div class="section-title">✅ Positive Signals</div>
+          <div class="pills" id="rSignals"></div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Summary -->
+        <div>
+          <div class="section-title">On-Chain Summary</div>
+          <div class="prose" id="rSummary"></div>
+        </div>
+
+        <!-- Verdict -->
+        <div>
+          <div class="section-title">Verdict</div>
+          <div class="prose" id="rVerdict"></div>
+        </div>
+      </div>
+
+      <div class="notion-row" id="notionRow" style="display:none">
+        📝 Saved to Notion — <a class="notion-link" id="notionLink" href="#" target="_blank" rel="noopener">Open page</a>
+      </div>
+    </div>
+
+    <div class="footer">Powered by Claude AI · Data from DexScreener, Etherscan, Honeypot.is, Solscan, RugCheck</div>
+  </div>
+</div>
+
+<script>
+  /* ── Chain detection hint ─────────────────────────────────────────── */
+  const input = document.getElementById('addressInput');
+  const chainHint = document.getElementById('chainHint');
+
+  function detectChain(addr) {
+    const s = addr.trim();
+    if (s.toLowerCase().startsWith('0x') && s.length === 42) return 'ETH';
+    if (s.length >= 32 && s.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(s)) return 'SOL';
+    return null;
+  }
+
+  input.addEventListener('input', () => {
+    const chain = detectChain(input.value);
+    if (chain === 'ETH') {
+      chainHint.innerHTML = 'Detected: <span class="chain-badge chain-eth">Ethereum</span>';
+    } else if (chain === 'SOL') {
+      chainHint.innerHTML = 'Detected: <span class="chain-badge chain-sol">Solana</span>';
+    } else {
+      chainHint.textContent = 'Paste an address to auto-detect chain.';
+    }
+  });
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') startAnalysis(); });
+
+  /* ── UI helpers ───────────────────────────────────────────────────── */
+  function show(id)  { document.getElementById(id).classList.add('visible'); }
+  function hide(id)  { document.getElementById(id).classList.remove('visible'); }
+  function text(id, v) { document.getElementById(id).textContent = v; }
+  function html(id, v) { document.getElementById(id).innerHTML = v; }
+
+  const STEPS = [
+    'Detecting chain…',
+    'Chain detected',
+    'Fetching on-chain & market data…',
+    'Running AI security analysis…',
+    'Saving to Notion…',
+  ];
+
+  let stepEls = [];
+
+  function initProgress() {
+    const list = document.getElementById('progressSteps');
+    list.innerHTML = '';
+    stepEls = STEPS.map((label, i) => {
+      const li = document.createElement('li');
+      li.className = 'step';
+      li.innerHTML = `
+        <span class="step-icon"><span class="dot"></span></span>
+        <span>${label}</span>`;
+      list.appendChild(li);
+      return li;
+    });
+  }
+
+  function activateStep(message) {
+    // Deactivate previous active step → mark as done
+    stepEls.forEach(el => {
+      if (el.classList.contains('active')) {
+        el.classList.remove('active');
+        el.classList.add('done');
+        el.querySelector('.step-icon').innerHTML = '<span class="check">✓</span>';
+      }
+    });
+    // Find matching step
+    const idx = STEPS.findIndex(s =>
+      message.toLowerCase().includes(s.replace('…','').trim().toLowerCase().split(' ')[0])
+    );
+    const target = idx >= 0 ? stepEls[idx] : stepEls.find(el => !el.classList.contains('done'));
+    if (target) {
+      target.classList.add('active');
+      target.querySelector('.step-icon').innerHTML = '<span class="spinner"></span>';
+      target.querySelector('span:last-child').textContent = message;
+    }
+  }
+
+  function finishProgress() {
+    stepEls.forEach(el => {
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.step-icon').innerHTML = '<span class="check">✓</span>';
+    });
+  }
+
+  /* ── Score colors ─────────────────────────────────────────────────── */
+  function scoreClass(score) {
+    if (score >= 75) return 'safe';
+    if (score >= 50) return 'caution';
+    if (score >= 25) return 'risky';
+    return 'scam';
+  }
+
+  /* ── Render result ────────────────────────────────────────────────── */
+  function renderResult(data) {
+    const tier = scoreClass(data.risk_score);
+
+    text('rTokenName', data.token_name || 'Unknown Token');
+
+    // Chain badge
+    const chainEl = document.getElementById('rChain');
+    chainEl.textContent = data.chain;
+    chainEl.className = `token-chain chain-${data.chain.toLowerCase()}`;
+
+    // Score
+    const scoreEl = document.getElementById('rScore');
+    scoreEl.textContent = data.risk_score;
+    scoreEl.className = `score-number text-${tier}`;
+
+    const labelEl = document.getElementById('rLabel');
+    labelEl.textContent = data.risk_label;
+    labelEl.className = `score-label text-${tier}`;
+
+    // Fill bar (animate after paint)
+    const fill = document.getElementById('rFill');
+    fill.className = `score-fill fill-${tier}`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { fill.style.width = `${data.risk_score}%`; });
+    });
+
+    // Red flags
+    const flagsEl = document.getElementById('rFlags');
+    if (data.red_flags && data.red_flags.length > 0) {
+      flagsEl.innerHTML = data.red_flags.map(f =>
+        `<span class="pill pill-red">${f}</span>`
+      ).join('');
+    } else {
+      flagsEl.innerHTML = '<span class="pill pill-none">None detected</span>';
+    }
+
+    // Positive signals
+    const sigEl = document.getElementById('rSignals');
+    if (data.positive_signals && data.positive_signals.length > 0) {
+      sigEl.innerHTML = data.positive_signals.map(s =>
+        `<span class="pill pill-green">${s}</span>`
+      ).join('');
+    } else {
+      sigEl.innerHTML = '<span class="pill pill-none">None detected</span>';
+    }
+
+    text('rSummary', data.on_chain_summary || '—');
+    text('rVerdict',  data.verdict         || '—');
+
+    // Notion
+    if (data.notion_url) {
+      document.getElementById('notionLink').href = data.notion_url;
+      document.getElementById('notionRow').style.display = 'flex';
+    } else {
+      document.getElementById('notionRow').style.display = 'none';
+    }
+
+    show('resultCard');
+  }
+
+  /* ── Main ─────────────────────────────────────────────────────────── */
+  let activeSource = null;
+
+  function startAnalysis() {
+    const address = input.value.trim();
+    if (!address) { input.focus(); return; }
+
+    // Close any existing stream
+    if (activeSource) { activeSource.close(); activeSource = null; }
+
+    // Reset UI
+    hide('resultCard');
+    hide('errorCard');
+    document.getElementById('analyzeBtn').disabled = true;
+
+    initProgress();
+    show('progressCard');
+
+    const url = `/analyze/stream?address=${encodeURIComponent(address)}`;
+    const es = new EventSource(url);
+    activeSource = es;
+
+    es.onmessage = e => {
+      let payload;
+      try { payload = JSON.parse(e.data); } catch { return; }
+
+      if (payload.type === 'status') {
+        activateStep(payload.message);
+      }
+      else if (payload.type === 'result') {
+        finishProgress();
+        setTimeout(() => {
+          hide('progressCard');
+          renderResult(payload.data);
+        }, 400);
+        es.close();
+        document.getElementById('analyzeBtn').disabled = false;
+      }
+      else if (payload.type === 'error') {
+        hide('progressCard');
+        const errEl = document.getElementById('errorCard');
+        errEl.textContent = `Error: ${payload.message}`;
+        show('errorCard');
+        es.close();
+        document.getElementById('analyzeBtn').disabled = false;
+      }
+    };
+
+    es.onerror = () => {
+      hide('progressCard');
+      const errEl = document.getElementById('errorCard');
+      errEl.textContent = 'Connection lost. Check that the server is running.';
+      show('errorCard');
+      es.close();
+      document.getElementById('analyzeBtn').disabled = false;
+    };
+  }
+</script>
+</body>
+</html>

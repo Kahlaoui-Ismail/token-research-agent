@@ -1,7 +1,16 @@
 services:
-  token-researcher:
+  # Web UI + API server
+  web:
+    build: .
+    command: uvicorn api.server:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+
+  # One-shot CLI analysis (optional)
+  # docker compose run cli <token_address>
+  cli:
     build: .
     env_file:
       - .env
-    # Pass the token address as a command argument:
-    # docker compose run token-researcher <token_address>
