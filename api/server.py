@@ -1,7 +1,6 @@
 """FastAPI server — wraps the token research agent behind an HTTP API."""
 
 import json
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -13,7 +12,6 @@ from fastapi.staticfiles import StaticFiles
 load_dotenv()
 
 from agent.claude_agent import analyze_token  # noqa: E402
-from agent.notion_writer import save_to_notion  # noqa: E402
 
 app = FastAPI(title="Token Research Agent")
 
@@ -58,19 +56,7 @@ async def analyze_stream(address: str = Query(..., min_length=10)):
 
             report = await analyze_token(address, chain)
 
-            notion_url = None
-            notion_key = os.environ.get("NOTION_API_KEY", "")
-            notion_db = os.environ.get("NOTION_DATABASE_ID", "")
-            if notion_key and notion_db:
-                yield _sse({"type": "status", "message": "Saving to Notion…"})
-                try:
-                    notion_url = await save_to_notion(report)
-                except Exception as exc:
-                    yield _sse({"type": "status", "message": f"Notion skipped: {exc}"})
-
-            result = report.model_dump()
-            result["notion_url"] = notion_url
-            yield _sse({"type": "result", "data": result})
+            yield _sse({"type": "result", "data": report.model_dump()})
 
         except Exception as exc:
             yield _sse({"type": "error", "message": str(exc)})

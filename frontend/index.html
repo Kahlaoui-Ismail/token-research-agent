@@ -393,24 +393,6 @@
       border-top: 1px solid var(--border);
     }
 
-    /* notion link */
-    .notion-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 24px;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .notion-link {
-      color: var(--cyan);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .notion-link:hover { text-decoration: underline; }
 
     /* ── Error card ──────────────────────────────────────────────────── */
     .error-card {
@@ -551,9 +533,6 @@
         </div>
       </div>
 
-      <div class="notion-row" id="notionRow" style="display:none">
-        📝 Saved to Notion — <a class="notion-link" id="notionLink" href="#" target="_blank" rel="noopener">Open page</a>
-      </div>
     </div>
 
     <div class="footer">Powered by Claude AI · Data from DexScreener, Etherscan, Honeypot.is, Solscan, RugCheck</div>
@@ -596,7 +575,6 @@
     'Chain detected',
     'Fetching on-chain & market data…',
     'Running AI security analysis…',
-    'Saving to Notion…',
   ];
 
   let stepEls = [];
@@ -701,14 +679,6 @@
 
     text('rSummary', data.on_chain_summary || '—');
     text('rVerdict',  data.verdict         || '—');
-
-    // Notion
-    if (data.notion_url) {
-      document.getElementById('notionLink').href = data.notion_url;
-      document.getElementById('notionRow').style.display = 'flex';
-    } else {
-      document.getElementById('notionRow').style.display = 'none';
-    }
 
     show('resultCard');
   }

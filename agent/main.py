@@ -9,7 +9,6 @@ from rich.panel import Panel
 from rich.text import Text
 
 from agent.claude_agent import analyze_token
-from agent.notion_writer import save_to_notion
 
 console = Console()
 
@@ -43,7 +42,7 @@ def _label_icon(label: str) -> str:
     return icons.get(label, "")
 
 
-def display_report(report, saved_to_notion: bool = False) -> None:
+def display_report(report) -> None:
     score_color = _score_color(report.risk_score)
     label_icon = _label_icon(report.risk_label)
 
@@ -83,8 +82,6 @@ def display_report(report, saved_to_notion: bool = False) -> None:
     console.print(f"  {report.verdict}")
     console.print()
 
-    if saved_to_notion:
-        console.print("[bold green]📝 Saved to Notion[/bold green]")
 
 
 async def run(address: str) -> None:
@@ -102,16 +99,8 @@ async def run(address: str) -> None:
     with console.status("[bold cyan]Fetching on-chain data and running AI analysis…[/bold cyan]"):
         report = await analyze_token(address, chain)
 
-    saved = False
-    try:
-        await save_to_notion(report)
-        saved = True
-    except Exception as exc:
-        console.print(f"[yellow]⚠ Notion save skipped:[/yellow] {exc}")
-
-    # Clear the header — reprint full report
     console.clear()
-    display_report(report, saved_to_notion=saved)
+    display_report(report)
 
 
 def main() -> None:

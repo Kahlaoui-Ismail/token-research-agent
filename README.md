@@ -1,6 +1,6 @@
 # 🐋 Token Research Agent
 
-An AI-powered crypto token security analyst. Give it any Ethereum or Solana token address and it will fetch on-chain data from multiple sources, run a structured risk analysis via Claude, print a colour-coded report in the terminal, and save the results to a Notion database.
+An AI-powered crypto token security analyst. Give it any Ethereum or Solana token address and it will fetch on-chain data from multiple sources, run a structured risk analysis via Claude, and print a colour-coded report in the terminal.
 
 ---
 
@@ -15,7 +15,6 @@ An AI-powered crypto token security analyst. Give it any Ethereum or Solana toke
    - [RugCheck](https://rugcheck.xyz/) — risk score and risk items (SOL only)
 3. **Runs an agentic Claude loop** — Claude uses tool-use to request and reason over the data
 4. **Prints a rich terminal report** with colour-coded risk tier
-5. **Saves to Notion** with structured properties and a formatted page body
 
 ---
 
@@ -28,7 +27,6 @@ An AI-powered crypto token security analyst. Give it any Ethereum or Solana toke
 | AI | Anthropic SDK (`anthropic`) |
 | Data validation | Pydantic v2 |
 | Terminal UI | `rich` |
-| Persistence | Notion API |
 | Container | Docker / Docker Compose |
 
 ---
@@ -56,10 +54,6 @@ Edit `.env` and fill in your keys:
 |---|---|
 | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) |
 | `ETHERSCAN_API_KEY` | [etherscan.io/apis](https://etherscan.io/apis) |
-| `NOTION_API_KEY` | [notion.so/my-integrations](https://www.notion.so/my-integrations) — create an integration |
-| `NOTION_DATABASE_ID` | Share your Notion database with the integration; copy the ID from the URL |
-
-> **Notion database columns required:** `Token Name` (title), `Chain` (rich text), `Risk Score` (number), `Risk Label` (select), `Date` (date).
 
 ### 3. Run
 
@@ -95,8 +89,6 @@ ON-CHAIN SUMMARY:
 
 VERDICT:
   Low-risk asset. Widely audited, regulated issuer...
-
-📝 Saved to Notion
 ```
 
 > *(Replace with a real screenshot once you have one)*
@@ -122,7 +114,6 @@ token-research-agent/
 ├── agent/
 │   ├── main.py            # Entry point + rich terminal output
 │   ├── claude_agent.py    # Agentic tool-use loop with Claude
-│   ├── notion_writer.py   # Notion page creation
 │   ├── models.py          # Pydantic TokenReport model
 │   └── fetchers/
 │       ├── dexscreener.py # Market data (ETH + SOL)
