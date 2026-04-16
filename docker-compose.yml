@@ -1,0 +1,7 @@
+services:
+  token-researcher:
+    build: .
+    env_file:
+      - .env
+    # Pass the token address as a command argument:
+    # docker compose run token-researcher <token_address>
