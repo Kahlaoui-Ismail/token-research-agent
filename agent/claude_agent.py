@@ -10,7 +10,7 @@ from agent.fetchers.rugcheck import get_rugcheck_data
 from agent.fetchers.honeypot import get_honeypot_data
 from agent.models import TokenReport
 
-MODEL = "claude-sonnet-4-0"
+MODEL = "claude-sonnet-4-5"
 MAX_TOKENS = 1000
 
 SYSTEM_PROMPT = """\

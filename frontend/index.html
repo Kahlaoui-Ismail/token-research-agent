@@ -140,6 +140,54 @@
       color: var(--muted);
     }
 
+    .try-tokens {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .try-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .try-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+
+    .try-chip:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: var(--cyan-dim);
+    }
+
+    .try-chip-tag {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .try-chip:hover .try-chip-tag { color: var(--cyan); }
+
     .chain-badge {
       display: inline-block;
       padding: 1px 7px;
@@ -431,6 +479,18 @@
       <div class="chain-hint" id="chainHint">
         Paste an address to auto-detect chain.
       </div>
+      <div class="try-tokens">
+        <span class="try-label">Try:</span>
+        <button class="try-chip" onclick="tryToken('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')">
+          <span class="try-chip-tag">USDC</span> ETH
+        </button>
+        <button class="try-chip" onclick="tryToken('0x6982508145454Ce325dDbE47a25d4ec3d2311933')">
+          <span class="try-chip-tag">PEPE</span> ETH
+        </button>
+        <button class="try-chip" onclick="tryToken('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263')">
+          <span class="try-chip-tag">BONK</span> SOL
+        </button>
+      </div>
     </div>
 
     <!-- Progress -->
@@ -651,6 +711,13 @@
     }
 
     show('resultCard');
+  }
+
+  /* ── Try-token chips ─────────────────────────────────────────────── */
+  function tryToken(address) {
+    input.value = address;
+    input.dispatchEvent(new Event('input'));   // trigger chain hint update
+    startAnalysis();
   }
 
   /* ── Main ─────────────────────────────────────────────────────────── */
