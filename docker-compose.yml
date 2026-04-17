@@ -1,16 +1,31 @@
 services:
-  # Web UI + API server
-  web:
-    build: .
-    command: uvicorn api.server:app --host 0.0.0.0 --port 8000
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+    env_file: .env
 
-  # One-shot CLI analysis (optional)
-  # docker compose run cli <token_address>
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Omit VITE_API_URL — nginx proxies /analyze to the api service,
+        # so the browser uses a relative path with no cross-origin issues.
+        # Uncomment and set to target a remote API instead:
+        # VITE_API_URL: https://api.example.com
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  # One-shot CLI analysis — reuses the api image
+  # Usage: docker compose run cli <token_address>
   cli:
-    build: .
-    env_file:
-      - .env
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    command: ["python", "-m", "agent.main"]
+    env_file: .env
