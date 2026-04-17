@@ -59,7 +59,8 @@ export default function App() {
     setReport(null)
     setError(null)
 
-    const url = `/analyze/stream?address=${encodeURIComponent(trimmed)}`
+    const apiBase = import.meta.env.VITE_API_URL ?? ''
+    const url = `${apiBase}/analyze/stream?address=${encodeURIComponent(trimmed)}`
     const es = new EventSource(url)
     esRef.current = es
 
