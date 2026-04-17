@@ -3,7 +3,7 @@ from datetime import date
 
 import httpx
 
-from agent.models import TokenReport
+from .models import TokenReport
 
 NOTION_API_VERSION = "2022-06-28"
 NOTION_PAGES_URL = "https://api.notion.com/v1/pages"

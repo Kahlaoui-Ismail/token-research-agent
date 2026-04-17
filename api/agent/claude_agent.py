@@ -3,12 +3,12 @@ import os
 import asyncio
 import anthropic
 
-from agent.fetchers.dexscreener import get_dexscreener_data
-from agent.fetchers.etherscan import get_etherscan_data
-from agent.fetchers.solscan import get_solscan_data
-from agent.fetchers.rugcheck import get_rugcheck_data
-from agent.fetchers.honeypot import get_honeypot_data
-from agent.models import TokenReport
+from .fetchers.dexscreener import get_dexscreener_data
+from .fetchers.etherscan import get_etherscan_data
+from .fetchers.solscan import get_solscan_data
+from .fetchers.rugcheck import get_rugcheck_data
+from .fetchers.honeypot import get_honeypot_data
+from .models import TokenReport
 
 MODEL = "claude-sonnet-4-5"
 MAX_TOKENS = 1000
