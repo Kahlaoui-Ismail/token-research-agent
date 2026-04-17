@@ -2,6 +2,7 @@
 
 An AI-powered crypto token security analyst. Give it any Ethereum or Solana token address and it will fetch on-chain data from multiple sources, run a structured risk analysis via Claude, and print a colour-coded report in the terminal.
 
+![demo placeholder](docs/demo.gif)
 ---
 
 ## What it does
